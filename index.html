@@ -425,7 +425,8 @@ Idiomas: Inglês Básico.</textarea>
 
         function getApiUrl() {
             const key = localStorage.getItem('gemini_api_key_cv') || '';
-            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+            // USANDO A VERSÃO CORRETA DA API AQUI
+            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
         }
 
         // --- NAVEGAÇÃO DE ABAS ---
@@ -687,7 +688,7 @@ Idiomas: Inglês Básico.</textarea>
             }
         }
 
-        // --- FUNÇÕES DA IA (MANTIDAS INTACTAS E FUNCIONANDO) ---
+        // --- FUNÇÕES DA IA ---
         async function melhorarTextoIA(elementoOuId, tipo, btnElement) {
             const apiUrl = getApiUrl();
             let textarea = typeof elementoOuId === 'string' ? document.getElementById(elementoOuId) : elementoOuId;
