@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construtor de Currículo Estratégico com IA</title>
+    
+    <!-- Dependências Externas (PDF.js e Mammoth) para leitura de PDF e Word -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+
+    <style>
+        /* --- ESTILOS DA INTERFACE (SISTEMA) --- */
+        :root {
+            --cor-primaria: #2c3e50;
+            --cor-secundaria: #34495e;
+            --cor-destaque: #3498db;
+            --cor-fundo: #ecf0f1;
+            --cor-borda: #bdc3c7;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; background-color: var(--cor-fundo); color: #333; overflow: hidden;}
+        
+        /* Painel Esquerdo (Controles) */
+        .painel-lateral { width: 500px; display: flex; flex-direction: column; background-color: #fff; border-right: 1px solid var(--cor-borda); box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 10; }
+        
+        .cabecalho-app { background-color: var(--cor-primaria); color: white; padding: 15px 20px; }
+        .cabecalho-app h1 { margin: 0; font-size: 18px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .abas { display: flex; background-color: var(--cor-secundaria); }
+        .btn-aba { flex: 1; padding: 12px 5px; background: none; border: none; color: #bdc3c7; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; border-bottom: 3px solid transparent; }
+        .btn-aba:hover { color: white; }
+        .btn-aba.ativo { color: white; border-bottom-color: var(--cor-destaque); background-color: rgba(255,255,255,0.05); }
+
+        .conteudo-abas { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
+        .aba-panel { display: none; }
+        .aba-panel.ativo { display: block; }
+
+        /* Formulários */
+        fieldset { border: 1px solid var(--cor-borda); border-radius: 6px; padding: 15px; margin-bottom: 20px; background-color: #f9fbfd; }
+        legend { font-weight: bold; font-size: 13px; color: var(--cor-primaria); padding: 0 8px; background: #fff; border: 1px solid var(--cor-borda); border-radius: 4px; }
+        
+        .form-grupo { margin-bottom: 12px; }
+        .form-grupo label { display: block; font-weight: 600; font-size: 11px; margin-bottom: 4px; color: #555; text-transform: uppercase;}
+        .form-grupo input, .form-grupo textarea { width: 100%; padding: 8px; border: 1px solid var(--cor-borda); border-radius: 4px; font-size: 13px; box-sizing: border-box; font-family: inherit; }
+        .form-grupo textarea { resize: vertical; min-height: 80px; }
+        .form-grupo input:focus, .form-grupo textarea:focus { outline: none; border-color: var(--cor-destaque); box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
+        
+        .linha { display: flex; gap: 10px; }
+        .linha > div { flex: 1; }
+
+        /* Botões dinâmicos */
+        .btn-acao { width: 100%; padding: 12px; background-color: var(--cor-destaque); color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 10px; transition: 0.2s; }
+        .btn-acao:hover { background-color: #2980b9; }
+        .btn-add { background-color: #2ecc71; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-add:hover { background-color: #27ae60; }
+        .btn-remover { background-color: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; float: right; }
+        .btn-imprimir { background-color: #27ae60; margin: 0; border-radius: 0; padding: 15px; border: none; color: white; cursor: pointer; font-weight: bold;}
+        .btn-imprimir:hover { background-color: #219150; }
+
+        /* Botão IA Menor */
+        .btn-ia-small { background-color: #8e44ad; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; float: right; transition: 0.2s; }
+        .btn-ia-small:hover { background-color: #9b59b6; }
+        .btn-ia-small:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Loader */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--cor-destaque); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 10px; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .caixa-ia { background-color: #e8f4f8; border-left: 4px solid var(--cor-destaque); padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 13px; line-height: 1.5; }
+
+        /* --- PREVIEW E PAGINAÇÃO (A4) --- */
+        .painel-preview { 
+            flex: 1; padding: 30px; overflow-y: auto; 
+            display: flex; flex-direction: column; align-items: center; gap: 30px; 
+            background-color: #525659; 
+        }
+        
+        .folha-a4 {
+            width: 210mm; height: 297mm; /* Altura fixa para forçar a quebra no visualizador */
+            padding: 15mm 20mm; box-sizing: border-box; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            background-color: white; font-family: 'Arial', sans-serif; color: #000; line-height: 1.4;
+            position: relative; overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .conteudo-pagina {
+            width: 100%; height: 100%;
+        }
+
+        /* Remove a margem do topo do primeiro elemento que cai em uma nova página */
+        .conteudo-pagina > :first-child { margin-top: 0 !important; }
+
+        /* Tipografia do Currículo Estratégico (ATS Friendly) */
+        .cv-nome { font-size: 24pt; font-weight: bold; color: #000; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; }
+        .cv-titulo { font-size: 14pt; color: #333; margin: 0 0 15px 0; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        
+        .cv-contatos { font-size: 10pt; color: #000; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+        .cv-contatos div { display: flex; align-items: center; gap: 5px; }
+        .cv-icon { width: 14px; height: 14px; fill: #000; }
+        
+        .cv-resumo { font-size: 11pt; text-align: justify; margin-bottom: 25px; }
+        
+        .cv-secao-titulo { font-size: 12pt; font-weight: bold; text-transform: uppercase; color: #000; border-bottom: 1px solid #000; padding-bottom: 3px; margin-top: 20px; margin-bottom: 15px; letter-spacing: 0.5px; }
+        
+        .cv-item { margin-bottom: 15px; }
+        .cv-item-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+        .cv-empresa { font-weight: bold; font-size: 11pt; }
+        .cv-local { font-size: 10pt; color: #555; }
+        .cv-cargo { font-weight: bold; font-size: 10.5pt; font-style: italic; color: #333; }
+        .cv-data { font-size: 10pt; color: #555; }
+        
+        .cv-bullets { margin: 5px 0 0 0; padding-left: 20px; font-size: 10.5pt; text-align: justify; }
+        .cv-bullets li { margin-bottom: 4px; }
+
+        .cv-habilidades { font-size: 10.5pt; line-height: 1.6; }
+        .cv-habilidades strong { font-weight: bold; }
+
+        /* --- MODO DE IMPRESSÃO --- */
+        @media print {
+            body { background: none; margin: 0; padding: 0; overflow: visible; display: block; }
+            .painel-lateral { display: none !important; }
+            .painel-preview { display: block; padding: 0; background: none; overflow: visible; gap: 0; }
+            
+            .folha-a4 { 
+                box-shadow: none; margin: 0; padding: 15mm 20mm; width: 100%; 
+                height: 297mm; page-break-after: always; break-after: page; 
+            }
+            .folha-a4:last-child { page-break-after: auto; break-after: auto; }
+            @page { size: A4; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAINEL LATERAL -->
+    <div class="painel-lateral">
+        <div class="cabecalho-app">
+            <h1>📄 CV Estratégico IA 
+                <div>
+                    <button class="btn-imprimir" style="background:#8e44ad; padding:8px; margin-right:5px; font-size:11px; border-radius: 4px;" onclick="toggleConfigIA()">⚙️ API IA</button>
+                    <button class="btn-imprimir" style="border-radius: 4px;" onclick="window.print()">🖨️ IMPRIMIR / PDF</button>
+                </div>
+            </h1>
+        </div>
+
+        <!-- CONFIGURAÇÃO DA API -->
+        <div id="painel-config-ia" style="display: none; padding: 15px; background: #fff3cd; border-bottom: 1px solid #ffeeba; font-size: 13px; color: #856404;">
+            <strong>🤖 Configuração da Inteligência Artificial</strong><br>
+            <p style="margin: 8px 0;">Para as funções de IA funcionarem, você precisa de uma chave gratuita do Google Gemini:</p>
+            <ol style="margin-left: -15px; margin-top: 5px;">
+                <li>Acesse o <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #0056b3; font-weight: bold;">Google AI Studio</a> e faça login.</li>
+                <li>Clique no botão azul <b>Create API Key</b>.</li>
+                <li>Copie o código gerado, cole no campo abaixo e salve.</li>
+            </ol>
+            <input type="password" id="in-api-key" placeholder="Cole sua chave AIzaSy..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px; box-sizing: border-box; font-family: monospace;">
+            <button class="btn-acao" style="padding: 10px; margin-top: 0;" onclick="salvarApiKey()">Salvar Chave no Navegador</button>
+        </div>
+        
+        <div class="abas">
+            <button class="btn-aba ativo" onclick="mudarAba('aba-editar', this)">1. Edição Manual</button>
+            <button class="btn-aba" onclick="mudarAba('aba-importar', this)">2. Importar c/ IA</button>
+            <button class="btn-aba" onclick="mudarAba('aba-analisar', this)">3. Analisar Vaga</button>
+        </div>
+
+        <div class="conteudo-abas">
+            
+            <!-- ABA 1: EDIÇÃO -->
+            <div id="aba-editar" class="aba-panel ativo">
+                <form id="formCV" oninput="atualizarCV()">
+                    
+                    <fieldset>
+                        <legend>Cabeçalho</legend>
+                        <div class="form-grupo"><label>Nome Completo</label><input type="text" id="in-nome" value="Herlon Victor Lopes Rocha"></div>
+                        <div class="form-grupo"><label>Título Profissional (O que você faz?)</label><input type="text" id="in-titulo" value="Analista de Desenvolvimento de Produtos | Estudante de C&T"></div>
+                        <div class="linha">
+                            <div class="form-grupo"><label>Telefone</label><input type="text" id="in-tel" value="(11) 97195-8257"></div>
+                            <div class="form-grupo"><label>E-mail</label><input type="text" id="in-email" value="herlonvictorrocha26@gmail.com"></div>
+                        </div>
+                        <div class="linha">
+                            <div class="form-grupo"><label>LinkedIn (URL ou /in)</label><input type="text" id="in-linkedin" value="linkedin.com/in/herlonvictor"></div>
+                            <div class="form-grupo"><label>GitHub / Portfólio (Opcional)</label><input type="text" id="in-github" value="github.com/herlonvictor"></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Resumo Estratégico (A Fórmula do Sucesso) <button type="button" class="btn-ia-small" onclick="melhorarTextoIA('in-resumo', 'resumo', this)">✨ Melhorar com IA</button></legend>
+                        <div class="caixa-ia" style="padding: 10px; margin-bottom: 10px; font-size:11px;">💡 <b>Dica:</b> Ação + Contexto/Tecnologia + Impacto. Fale de resultados, não só de tarefas.</div>
+                        <div class="form-grupo">
+                            <textarea id="in-resumo" style="min-height: 120px;">Profissional da área de tecnologia e desenvolvimento com sólida base técnica em Mecatrônica e cursando Bacharelado em Ciência e Tecnologia na UFABC. Atualmente atuo no desenvolvimento e homologação de produtos, focando em testes de protótipos, otimização de processos contínuos e contato técnico com fornecedores. Possuo forte capacidade de resolução de problemas, perfil proativo e conhecimentos práticos em linguagens de programação, buscando aplicar inovação em ambientes desafiadores.</textarea>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Experiência Profissional</legend>
+                        <button type="button" class="btn-add" onclick="addExperiencia()">+ Adicionar Experiência</button>
+                        <div id="container-experiencia">
+                            <!-- Exp 1 (Pré-preenchida Estrategicamente baseada no currículo original) -->
+                            <div class="bloco-dinamico" style="border: 1px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+                                <div class="linha">
+                                    <div class="form-grupo"><label>Empresa</label><input type="text" class="exp-empresa" value="Sodramar"></div>
+                                    <div class="form-grupo"><label>Localidade / Remoto</label><input type="text" class="exp-local" value="Diadema, SP"></div>
+                                </div>
+                                <div class="linha">
+                                    <div class="form-grupo"><label>Cargo</label><input type="text" class="exp-cargo" value="Estagiário de Desenvolvimento de Produtos"></div>
+                                    <div class="form-grupo"><label>Período (Ex: 08/2024 - Atual)</label><input type="text" class="exp-data" value="08/2024 - Presente"></div>
+                                </div>
+                                <div class="form-grupo">
+                                    <label>Conquistas e Resultados (Use Marcadores / Bullets) <button type="button" class="btn-ia-small" onclick="melhorarTextoIA(this.closest('.form-grupo').querySelector('textarea'), 'experiencia', this)">✨ Melhorar com IA</button></label>
+                                    <textarea class="exp-descricao" style="min-height: 100px;">• Conduzo testes rigorosos em protótipos e proponho melhorias estruturais, contribuindo para o desenvolvimento de soluções tecnológicas mais inovadoras.
+• Colaboro ativamente com equipes multidisciplinares para otimização de fluxos produtivos e elaboração de documentação técnica padronizada.
+• Atuo na homologação de soluções técnicas e mantenho contato direto com fornecedores para garantir a qualidade dos insumos e alinhamento às tendências de mercado.</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Educação Acadêmica</legend>
+                        <button type="button" class="btn-add" onclick="addEducacao()">+ Adicionar Formação</button>
+                        <div id="container-educacao">
+                            <!-- Edu 1 -->
+                            <div class="bloco-dinamico" style="border: 1px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+                                <button type="button" class="btn-remover" onclick="this.parentElement.remove(); atualizarCV();">Remover</button>
+                                <div class="linha">
+                                    <div class="form-grupo"><label>Instituição</label><input type="text" class="edu-inst" value="Universidade Federal do ABC (UFABC)"></div>
+                                    <div class="form-grupo"><label>Local</label><input type="text" class="edu-local" value="Santo André, SP"></div>
+                                </div>
+                                <div class="linha">
+                                    <div class="form-grupo" style="flex: 2;"><label>Curso</label><input type="text" class="edu-curso" value="Bacharelado em Ciência e Tecnologia"></div>
+                                    <div class="form-grupo"><label>Período</label><input type="text" class="edu-data" value="07/2024 - 07/2028"></div>
+                                </div>
+                            </div>
+                            <!-- Edu 2 -->
+                            <div class="bloco-dinamico" style="border: 1px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+                                <button type="button" class="btn-remover" onclick="this.parentElement.remove(); atualizarCV();">Remover</button>
+                                <div class="linha">
+                                    <div class="form-grupo"><label>Instituição</label><input type="text" class="edu-inst" value="SENAI"></div>
+                                    <div class="form-grupo"><label>Local</label><input type="text" class="edu-local" value="São Caetano do Sul, SP"></div>
+                                </div>
+                                <div class="linha">
+                                    <div class="form-grupo" style="flex: 2;"><label>Curso</label><input type="text" class="edu-curso" value="Técnico em Mecatrônica"></div>
+                                    <div class="form-grupo"><label>Período</label><input type="text" class="edu-data" value="06/2022 - 06/2024"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Habilidades & Competências (Cursos)</legend>
+                        <div class="caixa-ia" style="padding: 10px; margin-bottom: 10px; font-size:11px;">💡 <b>Dica:</b> Agrupe por categorias. Ex: "Linguagens: Python, Java". Facilita a leitura do robô de recrutamento (ATS).</div>
+                        <div class="form-grupo">
+                            <textarea id="in-habilidades" style="min-height: 100px;">Linguagens de Programação: C, C++, Java e Python.
+Certificações Técnicas (SENAI): Introdução e Desenvolvimento em JAVA (120h), Desvendando o 5G, Web 3.0, Privacidade e Proteção de Dados, Economia Circular.
+Ferramentas: Microsoft Excel Básico.
+Idiomas: Inglês Básico.</textarea>
+                        </div>
+                    </fieldset>
+
+                </form>
+            </div>
+
+            <!-- ABA 2: IMPORTAR -->
+            <div id="aba-importar" class="aba-panel">
+                <div class="caixa-ia">
+                    <strong>Importação Inteligente</strong><br>
+                    Anexe um currículo antigo em <b>PDF ou Word (.docx)</b> ou cole o texto cru na caixa. A Inteligência Artificial vai identificar os campos, melhorar a escrita focado em resultados (métricas) e preencher o formulário automaticamente.
+                </div>
+                
+                <fieldset style="background: white;">
+                    <legend>1. Anexar Arquivo (Opcional - PDF ou Word)</legend>
+                    <div class="form-grupo">
+                        <input type="file" id="in-file-import" accept=".pdf,.docx,.doc" onchange="lerArquivoCurriculo(event)" style="border: 2px dashed var(--cor-destaque); cursor: pointer; padding: 15px; text-align: center;">
+                    </div>
+                </fieldset>
+
+                <div class="form-grupo">
+                    <label>2. Texto Extraído (Edite se estiver incorreto ou cole manualmente):</label>
+                    <textarea id="in-import" style="min-height: 250px;" placeholder="Ex: Herlon Victor... Experiência: Estagiário na Sodramar..."></textarea>
+                </div>
+                <button class="btn-acao" onclick="importarCV()" id="btn-run-import">3. Preencher Currículo Magicamente <span class="loader" id="load-import"></span></button>
+            </div>
+
+            <!-- ABA 3: ANALISADOR DE VAGAS -->
+            <div id="aba-analisar" class="aba-panel">
+                <div class="caixa-ia">
+                    <strong>Analisador Estratégico de Vagas</strong><br>
+                    Cole a descrição da vaga (Job Description) que você quer aplicar. O Gemini vai ler o seu currículo atual, cruzar com as exigências da vaga e te dizer **exatamente** o que você precisa mudar ou destacar no seu currículo para ser chamado para a entrevista.
+                </div>
+                <div class="form-grupo">
+                    <label>Cole a descrição da Vaga (Requisitos, Funções, etc):</label>
+                    <textarea id="in-vaga" style="min-height: 150px;" placeholder="Ex: Vaga para Desenvolvedor Júnior. Requisitos: Conhecimento em Python, metodologias ágeis..."></textarea>
+                </div>
+                <button class="btn-acao" onclick="analisarVaga()" id="btn-run-analyze">Analisar Aderência à Vaga <span class="loader" id="load-analyze"></span></button>
+                
+                <div id="out-analise-ia" style="margin-top: 20px; font-size: 13px; line-height: 1.6; display: none; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+                    <!-- Resposta da IA aparecerá aqui -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ÁREA DE VISUALIZAÇÃO E PAGINAÇÃO AUTOMÁTICA -->
+    <div class="painel-preview" id="preview-pages">
+        <!-- As folhas A4 serão geradas dinamicamente aqui pelo JavaScript -->
+    </div>
+
+    <!-- LÓGICA DO SISTEMA -->
+    <script>
+        // Configuração Global do Leitor de PDF - Aponta o Worker para a nuvem
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        // --- CONFIGURAÇÃO DA API GEMINI NO NAVEGADOR ---
+        function toggleConfigIA() {
+            const painel = document.getElementById('painel-config-ia');
+            painel.style.display = painel.style.display === 'none' ? 'block' : 'none';
+            if (painel.style.display === 'block') {
+                document.getElementById('in-api-key').value = localStorage.getItem('gemini_api_key_cv') || '';
+            }
+        }
+
+        function salvarApiKey() {
+            const key = document.getElementById('in-api-key').value.trim();
+            if(key) {
+                localStorage.setItem('gemini_api_key_cv', key);
+                alert('✅ Chave da Inteligência Artificial salva com sucesso!');
+                toggleConfigIA();
+            } else {
+                alert('❌ Por favor, cole uma chave válida.');
+            }
+        }
+
+        function getApiUrl() {
+            // A API KEY exata do seu prompt anterior que funciona
+            const key = localStorage.getItem('gemini_api_key_cv') || '';
+            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
+        }
+
+        // --- NAVEGAÇÃO DE ABAS ---
+        function mudarAba(idAba, btnElement) {
+            document.querySelectorAll('.aba-panel').forEach(el => el.classList.remove('ativo'));
+            document.querySelectorAll('.btn-aba').forEach(el => el.classList.remove('ativo'));
+            document.getElementById(idAba).classList.add('ativo');
+            btnElement.classList.add('ativo');
+        }
+
+        // --- SISTEMA DE CAMPOS DINÂMICOS (Adicionar/Remover) ---
+        function addExperiencia() {
+            const container = document.getElementById('container-experiencia');
+            const div = document.createElement('div');
+            div.className = 'bloco-dinamico';
+            div.style = "border: 1px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 4px;";
+            div.innerHTML = `
+                <button type="button" class="btn-remover" onclick="this.parentElement.remove(); atualizarCV();">Remover</button>
+                <div class="linha">
+                    <div class="form-grupo"><label>Empresa</label><input type="text" class="exp-empresa" value=""></div>
+                    <div class="form-grupo"><label>Localidade</label><input type="text" class="exp-local" value=""></div>
+                </div>
+                <div class="linha">
+                    <div class="form-grupo"><label>Cargo</label><input type="text" class="exp-cargo" value=""></div>
+                    <div class="form-grupo"><label>Período</label><input type="text" class="exp-data" value=""></div>
+                </div>
+                <div class="form-grupo">
+                    <label>Conquistas e Resultados (Use Bullets) <button type="button" class="btn-ia-small" onclick="melhorarTextoIA(this.closest('.form-grupo').querySelector('textarea'), 'experiencia', this)">✨ Melhorar com IA</button></label>
+                    <textarea class="exp-descricao" style="min-height: 80px;">• </textarea>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addEducacao() {
+            const container = document.getElementById('container-educacao');
+            const div = document.createElement('div');
+            div.className = 'bloco-dinamico';
+            div.style = "border: 1px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 4px;";
+            div.innerHTML = `
+                <button type="button" class="btn-remover" onclick="this.parentElement.remove(); atualizarCV();">Remover</button>
+                <div class="linha">
+                    <div class="form-grupo"><label>Instituição</label><input type="text" class="edu-inst" value=""></div>
+                    <div class="form-grupo"><label>Local</label><input type="text" class="edu-local" value=""></div>
+                </div>
+                <div class="linha">
+                    <div class="form-grupo" style="flex: 2;"><label>Curso</label><input type="text" class="edu-curso" value=""></div>
+                    <div class="form-grupo"><label>Período</label><input type="text" class="edu-data" value=""></div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function atualizarCV() {
+            const container = document.getElementById('preview-pages');
+            
+            // Salva a posição do scroll para não "pular" a tela enquanto o usuário digita
+            const scrollPos = container.scrollTop;
+            
+            // Limpa todas as páginas visíveis
+            container.innerHTML = '';
+
+            let paginaAtual = criarPagina(container);
+            let conteudoAtual = paginaAtual.querySelector('.conteudo-pagina');
+
+            function criarPagina(parent) {
+                const page = document.createElement('div');
+                page.className = 'folha-a4';
+                const content = document.createElement('div');
+                content.className = 'conteudo-pagina';
+                page.appendChild(content);
+                parent.appendChild(page);
+                return page;
+            }
+
+            function adicionarElemento(htmlString, isTitle = false) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlString.trim();
+                const el = tempDiv.firstChild;
+                
+                if(isTitle) el.classList.add('is-secao-titulo');
+                
+                conteudoAtual.appendChild(el);
+                
+                if (conteudoAtual.scrollHeight > conteudoAtual.clientHeight + 2) {
+                    
+                    conteudoAtual.removeChild(el);
+                    
+                    let elementoAnterior = conteudoAtual.lastElementChild;
+                    let moveuTitulo = false;
+                    if (elementoAnterior && elementoAnterior.classList.contains('is-secao-titulo')) {
+                        conteudoAtual.removeChild(elementoAnterior);
+                        moveuTitulo = true;
+                    }
+
+                    paginaAtual = criarPagina(container);
+                    conteudoAtual = paginaAtual.querySelector('.conteudo-pagina');
+                    
+                    if(moveuTitulo) {
+                        conteudoAtual.appendChild(elementoAnterior);
+                    }
+                    conteudoAtual.appendChild(el);
+                }
+            }
+
+            
+            // 1. CABEÇALHO
+            const nome = document.getElementById('in-nome').value;
+            const titulo = document.getElementById('in-titulo').value;
+            adicionarElemento(`<div class="cv-nome">${nome || 'SEU NOME'}</div>`);
+            adicionarElemento(`<div class="cv-titulo">${titulo || 'Título Profissional'}</div>`);
+            
+            // 2. CONTATOS
+            const tel = document.getElementById('in-tel').value;
+            const email = document.getElementById('in-email').value;
+            const lk = document.getElementById('in-linkedin').value;
+            const gh = document.getElementById('in-github').value;
+
+            let contatosHtml = `<div class="cv-contatos">`;
+            if(tel) contatosHtml += `<div><svg class="cv-icon" viewBox="0 0 512 512"><path d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"/></svg> <span>${tel}</span></div>`;
+            if(email) contatosHtml += `<div><svg class="cv-icon" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/></svg> <span>${email}</span></div>`;
+            if(lk) contatosHtml += `<div><svg class="cv-icon" viewBox="0 0 448 512"><path d="M100.3 448H7.4V148.9h92.9zM53.8 108.1C24.1 108.1 0 83.5 0 53.8a53.8 53.8 0 0 1 107.6 0c0 29.7-24.1 54.3-53.8 54.3zM447.9 448h-92.7V302.4c0-34.7-.7-79.2-48.3-79.2-48.3 0-55.7 37.7-55.7 76.7V448h-92.8V148.9h89.1v40.8h1.3c12.4-23.5 42.7-48.3 87.9-48.3 94 0 111.3 61.9 111.3 142.3V448z"/></svg> <span>${lk}</span></div>`;
+            if(gh) contatosHtml += `<div><svg class="cv-icon" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3 .3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5 .3-6.2 2.3zm44.2-1.7c-2.9 .7-4.9 2.6-4.6 4.9 .3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3 .7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3 .3 2.9 2.3 3.9 1.6 1 3.6 .7 4.3-.7 .7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3 .7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3 .7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg> <span>${gh}</span></div>`;
+            contatosHtml += `</div>`;
+            if (tel || email || lk || gh) adicionarElemento(contatosHtml);
+
+            // 3. RESUMO
+            const resumo = document.getElementById('in-resumo').value;
+            if(resumo.trim()) adicionarElemento(`<div class="cv-resumo">${resumo}</div>`);
+
+            // 4. EXPERIÊNCIAS
+            const exps = document.querySelectorAll('#container-experiencia .bloco-dinamico');
+            if(exps.length > 0) {
+                let temExp = false;
+                exps.forEach(bloco => {
+                    const emp = bloco.querySelector('.exp-empresa').value;
+                    const loc = bloco.querySelector('.exp-local').value;
+                    const car = bloco.querySelector('.exp-cargo').value;
+                    const dat = bloco.querySelector('.exp-data').value;
+                    const desc = bloco.querySelector('.exp-descricao').value;
+                    
+                    if (emp || car) {
+                        if (!temExp) {
+                            adicionarElemento(`<div class="cv-secao-titulo">EXPERIÊNCIA PROFISSIONAL</div>`, true);
+                            temExp = true;
+                        }
+
+                        let bulletsHtml = '<ul class="cv-bullets">';
+                        desc.split('\n').forEach(linha => {
+                            let li = linha.trim().replace(/^•\s*/, '').replace(/^-\s*/, '');
+                            if(li) bulletsHtml += `<li>${li}</li>`;
+                        });
+                        bulletsHtml += '</ul>';
+
+                        adicionarElemento(`
+                            <div class="cv-item">
+                                <div class="cv-item-header">
+                                    <span class="cv-empresa">${emp}</span>
+                                    <span class="cv-local">${loc}</span>
+                                </div>
+                                <div class="cv-item-header">
+                                    <span class="cv-cargo">${car}</span>
+                                    <span class="cv-data">${dat}</span>
+                                </div>
+                                ${bulletsHtml}
+                            </div>
+                        `);
+                    }
+                });
+            }
+
+            // 5. EDUCAÇÃO
+            const edus = document.querySelectorAll('#container-educacao .bloco-dinamico');
+            if(edus.length > 0) {
+                let temEdu = false;
+                edus.forEach(bloco => {
+                    const inst = bloco.querySelector('.edu-inst').value;
+                    const loc = bloco.querySelector('.edu-local').value;
+                    const cur = bloco.querySelector('.edu-curso').value;
+                    const dat = bloco.querySelector('.edu-data').value;
+
+                    if (inst || cur) {
+                        if(!temEdu) {
+                            adicionarElemento(`<div class="cv-secao-titulo">EDUCAÇÃO</div>`, true);
+                            temEdu = true;
+                        }
+                        adicionarElemento(`
+                            <div class="cv-item">
+                                <div class="cv-item-header">
+                                    <span class="cv-empresa">${inst}</span>
+                                    <span class="cv-local">${loc}</span>
+                                </div>
+                                <div class="cv-item-header">
+                                    <span class="cv-cargo">${cur}</span>
+                                    <span class="cv-data">${dat}</span>
+                                </div>
+                            </div>
+                        `);
+                    }
+                });
+            }
+
+            // 6. HABILIDADES
+            const habTexto = document.getElementById('in-habilidades').value;
+            if(habTexto.trim()) {
+                adicionarElemento(`<div class="cv-secao-titulo">HABILIDADES E COMPETÊNCIAS</div>`, true);
+                
+                // Formatação: Deixa em negrito o que estiver antes dos dois pontos (Ex: "Linguagens:")
+                const habFormatado = habTexto.split('\n').map(linha => {
+                    if (linha.includes(':')) {
+                        const partes = linha.split(':');
+                        return `<strong>${partes[0]}:</strong>${partes.slice(1).join(':')}<br>`;
+                    }
+                    return linha + '<br>';
+                }).join('');
+                
+                adicionarElemento(`<div class="cv-habilidades">${habFormatado}</div>`);
+            }
+
+            // Restaura o scroll para a posição que o usuário estava
+            container.scrollTop = scrollPos; 
+        }
+
+        // Executa na primeira carga da tela
+        window.onload = atualizarCV;
+
+        // --- FUNÇÃO AUXILIAR: LER ARQUIVO PDF E WORD (NOVA) ---
+        async function lerArquivoCurriculo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const textarea = document.getElementById('in-import');
+            const btn = document.getElementById('btn-run-import');
+            
+            textarea.value = "⏳ Lendo o arquivo... Aguarde.";
+            btn.disabled = true;
+            const fileName = file.name.toLowerCase();
+
+            try {
+                if (fileName.endsWith('.pdf')) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    let fullText = '';
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        fullText += pageText + '\n\n';
+                    }
+                    
+                    if(fullText.trim() === '') {
+                        textarea.value = "";
+                        alert("Aviso: O PDF anexado parece ser uma imagem digitalizada sem texto selecionável. Por favor, cole o texto manualmente.");
+                    } else {
+                        textarea.value = fullText;
+                        alert('✅ Texto extraído! Agora clique no botão verde "Preencher Currículo Magicamente".');
+                    }
+                } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                    textarea.value = result.value;
+                    alert('✅ Texto extraído! Agora clique no botão verde "Preencher Currículo Magicamente".');
+                } else {
+                    textarea.value = "";
+                    alert("Formato não suportado. Use apenas arquivos PDF ou Word (.docx).");
+                }
+            } catch (error) {
+                console.error("Erro na extração:", error);
+                textarea.value = "";
+                alert("Falha técnica ao ler o arquivo. Ele pode estar protegido ou corrompido.");
+            } finally {
+                btn.disabled = false;
+                event.target.value = ''; // Reseta o input de arquivo
+            }
+        }
+
+        
+        // Função Auxiliar: Melhorar Textos Específicos com IA
+        async function melhorarTextoIA(elementoOuId, tipo, btnElement) {
+            const apiUrl = getApiUrl();
+            
+            let textarea = typeof elementoOuId === 'string' ? document.getElementById(elementoOuId) : elementoOuId;
+            const textoAtual = textarea.value;
+            
+            if (!textoAtual.trim() || textoAtual.trim() === '•') {
+                alert("Escreva um esboço primeiro para a Inteligência Artificial poder melhorar!");
+                return;
+            }
+
+            const textoOriginalBtn = btnElement.innerHTML;
+            btnElement.innerHTML = "⏳ Pensando...";
+            btnElement.disabled = true;
+
+            let promptText = "";
+            if (tipo === 'resumo') {
+                promptText = `Melhore o seguinte resumo profissional para um currículo estratégico. Formule um texto em primeira pessoa ("Eu") focado na estrutura "Ação + Contexto + Impacto". Deixe-o atrativo, direto, destaque conquistas e remova jargões genéricos. Seja conciso (no máximo um parágrafo):\n\n${textoAtual}`;
+            } else if (tipo === 'experiencia') {
+                promptText = `Melhore as seguintes descrições de experiência profissional para um currículo estratégico. Reescreva as tarefas em forma de bullet points usando (•). Inicie cada tópico com um Verbo de Ação forte (ex: Desenvolvi, Liderei, Reduzi). Foque em resultados atingidos e contexto, não apenas obrigações. Não invente informações irreais:\n\n${textoAtual}`;
+            }
+
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: "Você é um recrutador sênior especialista. Retorne APENAS o texto reescrito, pronto para uso." }] }
+            };
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const result = await response.json();
+                
+                // Trata o erro real devolvido pelo Google (ex: Chave inválida)
+                if (!response.ok) throw new Error(result.error?.message || "Erro de conexão com o Google.");
+
+                const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (textResponse) {
+                    textarea.value = textResponse.trim();
+                    atualizarCV(); // Força a atualização da página visual
+                }
+            } catch (error) {
+                alert("Erro na IA:\n" + error.message + "\n\nSe o erro for sobre 'API key', verifique se copiou a chave inteira sem espaços em '⚙️ API IA'.");
+            } finally {
+                btnElement.innerHTML = textoOriginalBtn;
+                btnElement.disabled = false;
+            }
+        }
+
+        // Função: Importar Currículo Cru e Separar no Formulário
+        async function importarCV() {
+            const apiUrl = getApiUrl();
+            
+            const textoAntigo = document.getElementById('in-import').value;
+            if(!textoAntigo.trim()) { alert("Cole o texto do seu currículo antigo primeiro!"); return; }
+
+            document.getElementById('load-import').style.display = 'inline-block';
+            document.getElementById('btn-run-import').disabled = true;
+
+            const systemPrompt = `Você é um Recrutador Tech. Sua missão é ler um currículo cru, extrair as informações e formata-las em JSON exato. No 'resumo', reescreva focado em "Ação+Contexto+Impacto". Nas experiências, transforme em bullets com verbos de ação.`;
+
+            const jsonSchema = {
+                type: "OBJECT",
+                properties: {
+                    nome: { type: "STRING" }, tituloProfissional: { type: "STRING" }, telefone: { type: "STRING" }, email: { type: "STRING" }, linkedin: { type: "STRING" }, github: { type: "STRING" }, resumoEstrategico: { type: "STRING" },
+                    experiencias: { type: "ARRAY", items: { type: "OBJECT", properties: { empresa: { type: "STRING" }, local: { type: "STRING" }, cargo: { type: "STRING" }, periodo: { type: "STRING" }, descricaoBullets: { type: "STRING" } } } },
+                    educacao: { type: "ARRAY", items: { type: "OBJECT", properties: { instituicao: { type: "STRING" }, local: { type: "STRING" }, curso: { type: "STRING" }, periodo: { type: "STRING" } } } },
+                    habilidadesTexto: { type: "STRING" }
+                }
+            };
+
+            const payload = { contents: [{ parts: [{ text: "Converta: \n" + textoAntigo }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: jsonSchema } };
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const result = await response.json();
+                
+                if (!response.ok) throw new Error(result.error?.message || "Erro de conexão com o Google.");
+
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (jsonText) {
+                    // Trava matemática (Expressão Regular): Remove marcação de markdown (```json) que o Google às vezes joga, mesmo quando pedimos MIME JSON
+                    let cleanText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    const startIndex = cleanText.indexOf('{');
+                    const endIndex = cleanText.lastIndexOf('}');
+                    if (startIndex !== -1 && endIndex !== -1) {
+                        cleanText = cleanText.substring(startIndex, endIndex + 1);
+                    }
+
+                    const data = JSON.parse(cleanText);
+                    
+                    document.getElementById('in-nome').value = data.nome || ""; document.getElementById('in-titulo').value = data.tituloProfissional || "";
+                    document.getElementById('in-tel').value = data.telefone || ""; document.getElementById('in-email').value = data.email || "";
+                    document.getElementById('in-linkedin').value = data.linkedin || ""; document.getElementById('in-github').value = data.github || "";
+                    document.getElementById('in-resumo').value = data.resumoEstrategico || ""; document.getElementById('in-habilidades').value = data.habilidadesTexto || "";
+
+                    const containerExp = document.getElementById('container-experiencia'); containerExp.innerHTML = '';
+                    (data.experiencias || []).forEach(exp => {
+                        addExperiencia();
+                        const lastBloco = containerExp.lastElementChild;
+                        lastBloco.querySelector('.exp-empresa').value = exp.empresa || ""; lastBloco.querySelector('.exp-local').value = exp.local || "";
+                        lastBloco.querySelector('.exp-cargo').value = exp.cargo || ""; lastBloco.querySelector('.exp-data').value = exp.periodo || "";
+                        lastBloco.querySelector('.exp-descricao').value = exp.descricaoBullets || "";
+                    });
+
+                    const containerEdu = document.getElementById('container-educacao'); containerEdu.innerHTML = '';
+                    (data.educacao || []).forEach(edu => {
+                        addEducacao();
+                        const lastBloco = containerEdu.lastElementChild;
+                        lastBloco.querySelector('.edu-inst').value = edu.instituicao || ""; lastBloco.querySelector('.edu-local').value = edu.local || "";
+                        lastBloco.querySelector('.edu-curso').value = edu.curso || ""; lastBloco.querySelector('.edu-data').value = edu.periodo || "";
+                    });
+
+                    atualizarCV();
+                    mudarAba('aba-editar', document.querySelector('.btn-aba'));
+                    alert("Importação e formatação IA concluída!");
+                }
+            } catch (error) {
+                alert("Erro ao importar:\n" + error.message);
+            } finally {
+                document.getElementById('load-import').style.display = 'none';
+                document.getElementById('btn-run-import').disabled = false;
+            }
+        }
+
+        // Função: Analisador de Vagas (Comparação do CV atual x Vaga)
+        async function analisarVaga() {
+            const apiUrl = getApiUrl();
+            
+            const vagaText = document.getElementById('in-vaga').value;
+            if(!vagaText.trim()) { alert("Cole a descrição da vaga primeiro!"); return; }
+
+            document.getElementById('load-analyze').style.display = 'inline-block';
+            document.getElementById('btn-run-analyze').disabled = true;
+            document.getElementById('out-analise-ia').style.display = 'none';
+
+            // Coleta todo o texto atualmente renderizado nas páginas do visualizador
+            const cvAtualTexto = document.getElementById('preview-pages').innerText;
+
+            const systemPrompt = `Você é um Recrutador Tech Sênior. Analise o currículo do candidato e compare com a vaga fornecida.
+            Sua resposta deve ter: 1. 📊 Pontuação de Aderência (%), 2. ✅ O que está bom, 3. ⚠️ O que falta e 4. 🎯 Sugestão prática: Reescreva 1 experiência dele para utilizar as palavras-chave exigidas pela vaga.`;
+
+            const payload = { contents: [{ parts: [{ text: `VAGA:\n${vagaText}\n\nCURRÍCULO ATUAL:\n${cvAtualTexto}` }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const result = await response.json();
+                
+                if (!response.ok) throw new Error(result.error?.message || "Erro desconhecido na API.");
+
+                const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (textResponse) {
+                    const htmlResponse = textResponse.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
+                    document.getElementById('out-analise-ia').innerHTML = htmlResponse;
+                    document.getElementById('out-analise-ia').style.display = 'block';
+                }
+            } catch (error) {
+                alert("Erro ao analisar a vaga:\n" + error.message);
+            } finally {
+                document.getElementById('load-analyze').style.display = 'none';
+                document.getElementById('btn-run-analyze').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
