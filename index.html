@@ -22,10 +22,13 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; background-color: var(--cor-fundo); color: #333; overflow: hidden;}
         
         /* Painel Esquerdo (Controles) */
-        .painel-lateral { width: 500px; display: flex; flex-direction: column; background-color: #fff; border-right: 1px solid var(--cor-borda); box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 10; }
+        .painel-lateral { width: 500px; display: flex; flex-direction: column; background-color: #fff; border-right: 1px solid var(--cor-borda); box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 10; transition: transform 0.3s ease-in-out; }
         
         .cabecalho-app { background-color: var(--cor-primaria); color: white; padding: 15px 20px; }
         .cabecalho-app h1 { margin: 0; font-size: 18px; display: flex; align-items: center; justify-content: space-between; }
+        
+        /* Melhora visual dos botões do topo */
+        .grupo-botoes-topo { display: flex; gap: 8px; }
         
         .abas { display: flex; background-color: var(--cor-secundaria); }
         .btn-aba { flex: 1; padding: 12px 5px; background: none; border: none; color: #bdc3c7; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; border-bottom: 3px solid transparent; }
@@ -42,7 +45,7 @@
         
         .form-grupo { margin-bottom: 12px; }
         .form-grupo label { display: block; font-weight: 600; font-size: 11px; margin-bottom: 4px; color: #555; text-transform: uppercase;}
-        .form-grupo input, .form-grupo textarea { width: 100%; padding: 8px; border: 1px solid var(--cor-borda); border-radius: 4px; font-size: 13px; box-sizing: border-box; font-family: inherit; }
+        .form-grupo input, .form-grupo textarea { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 4px; font-size: 13px; box-sizing: border-box; font-family: inherit; }
         .form-grupo textarea { resize: vertical; min-height: 80px; }
         .form-grupo input:focus, .form-grupo textarea:focus { outline: none; border-color: var(--cor-destaque); box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
         
@@ -50,28 +53,32 @@
         .linha > div { flex: 1; }
 
         /* Botões dinâmicos */
-        .btn-acao { width: 100%; padding: 12px; background-color: var(--cor-destaque); color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 10px; transition: 0.2s; }
+        .btn-acao { width: 100%; padding: 15px; background-color: var(--cor-destaque); color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
         .btn-acao:hover { background-color: #2980b9; }
-        .btn-add { background-color: #2ecc71; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-add { background-color: #2ecc71; color: white; border: none; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
         .btn-add:hover { background-color: #27ae60; }
-        .btn-remover { background-color: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; float: right; }
-        .btn-imprimir { background-color: #27ae60; margin: 0; border-radius: 0; padding: 15px; border: none; color: white; cursor: pointer; font-weight: bold;}
+        .btn-remover { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; float: right; font-weight: bold;}
+        .btn-imprimir { background-color: #27ae60; margin: 0; border-radius: 4px; padding: 10px 15px; border: none; color: white; cursor: pointer; font-weight: bold; font-size: 12px;}
         .btn-imprimir:hover { background-color: #219150; }
+        
+        /* Botão configuração IA */
+        .btn-config-ia { background-color: #8e44ad; margin: 0; border-radius: 4px; padding: 10px 15px; border: none; color: white; cursor: pointer; font-weight: bold; font-size: 12px;}
+        .btn-config-ia:hover { background-color: #732d91; }
 
         /* Botão IA Menor */
-        .btn-ia-small { background-color: #8e44ad; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; float: right; transition: 0.2s; }
+        .btn-ia-small { background-color: #8e44ad; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; float: right; transition: 0.2s; font-weight: bold; }
         .btn-ia-small:hover { background-color: #9b59b6; }
         .btn-ia-small:disabled { background-color: #ccc; cursor: not-allowed; }
 
         /* Loader */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--cor-destaque); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 10px; display: none; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--cor-destaque); border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-left: 10px; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .caixa-ia { background-color: #e8f4f8; border-left: 4px solid var(--cor-destaque); padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 13px; line-height: 1.5; }
 
         /* --- PREVIEW E PAGINAÇÃO (A4) --- */
         .painel-preview { 
-            flex: 1; padding: 30px; overflow-y: auto; 
+            flex: 1; padding: 30px; overflow-y: auto; overflow-x: auto;
             display: flex; flex-direction: column; align-items: center; gap: 30px; 
             background-color: #525659; 
         }
@@ -82,6 +89,7 @@
             background-color: white; font-family: 'Arial', sans-serif; color: #000; line-height: 1.4;
             position: relative; overflow: hidden;
             flex-shrink: 0;
+            transform-origin: top center;
         }
 
         .conteudo-pagina {
@@ -116,14 +124,77 @@
         .cv-habilidades { font-size: 10.5pt; line-height: 1.6; }
         .cv-habilidades strong { font-weight: bold; }
 
+        /* --- BOTÃO FLUTUANTE (MOBILE) --- */
+        .btn-mobile-toggle {
+            display: none;
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: var(--cor-destaque);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            z-index: 9999;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* --- ADAPTAÇÕES PARA CELULAR (RESPONSIVO) --- */
+        @media (max-width: 850px) {
+            .btn-mobile-toggle {
+                display: block; /* Mostra o botão flutuante */
+            }
+            .painel-lateral {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                z-index: 100;
+                transform: translateX(0); /* Fica por cima da tela toda */
+            }
+            /* Classe ativada pelo botão para esconder o formulário */
+            .painel-lateral.oculto {
+                transform: translateX(-100%); 
+            }
+            .painel-preview {
+                padding: 15px;
+                padding-bottom: 100px; /* Espaço pro botão não cobrir a folha */
+            }
+            .folha-a4 {
+                /* Ajuste de escala para caber melhor em telas pequenas */
+                transform: scale(0.65);
+                margin-bottom: -100mm; /* Compensa o espaço em branco da escala */
+            }
+            .cabecalho-app h1 {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .grupo-botoes-topo {
+                width: 100%;
+                display: flex;
+            }
+            .grupo-botoes-topo button {
+                flex: 1;
+                padding: 12px;
+            }
+            .linha {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+
         /* --- MODO DE IMPRESSÃO --- */
         @media print {
             body { background: none; margin: 0; padding: 0; overflow: visible; display: block; }
-            .painel-lateral { display: none !important; }
+            .painel-lateral, .btn-mobile-toggle { display: none !important; }
             .painel-preview { display: block; padding: 0; background: none; overflow: visible; gap: 0; }
             
             .folha-a4 { 
-                box-shadow: none; margin: 0; padding: 15mm 20mm; width: 100%; 
+                box-shadow: none; margin: 0; padding: 15mm 20mm; width: 100%; transform: scale(1);
                 height: 297mm; page-break-after: always; break-after: page; 
             }
             .folha-a4:last-child { page-break-after: auto; break-after: auto; }
@@ -133,23 +204,26 @@
 </head>
 <body>
 
-    <!-- PAINEL LATERAL -->
-    <div class="painel-lateral">
+    <!-- BOTÃO FLUTUANTE MOBILE -->
+    <button id="btn-mobile-toggle" class="btn-mobile-toggle" onclick="toggleMobileModo()">👁️ Ver Currículo</button>
+
+    <!-- PAINEL LATERAL (FORMULÁRIO) -->
+    <div class="painel-lateral" id="painel-lateral">
         <div class="cabecalho-app">
             <h1>📄 CV Estratégico IA 
-                <div>
-                    <button class="btn-imprimir" style="background:#8e44ad; padding:8px; margin-right:5px; font-size:11px; border-radius: 4px;" onclick="toggleConfigIA()">⚙️ API IA</button>
-                    <button class="btn-imprimir" style="border-radius: 4px;" onclick="window.print()">🖨️ IMPRIMIR / PDF</button>
+                <div class="grupo-botoes-topo">
+                    <button class="btn-config-ia" onclick="toggleConfigIA()">⚙️ API IA</button>
+                    <button class="btn-imprimir" onclick="window.print()">🖨️ IMPRIMIR</button>
                 </div>
             </h1>
         </div>
 
         <!-- CONFIGURAÇÃO DA API -->
-        <div id="painel-config-ia" style="display: none; padding: 15px; background: #fff3cd; border-bottom: 1px solid #ffeeba; font-size: 13px; color: #856404;">
+        <div id="painel-config-ia" style="display: none; padding: 15px; background: #fff3cd; border-bottom: 1px solid #ffeeba; font-size: 13px; color: #856404; overflow-y: auto;">
             <strong>🤖 Configuração da Inteligência Artificial</strong><br>
             <p style="margin: 8px 0;">Para as funções de IA funcionarem, você precisa de uma chave gratuita do Google Gemini:</p>
             <ol style="margin-left: -15px; margin-top: 5px;">
-                <li>Acesse o <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #0056b3; font-weight: bold;">Google AI Studio</a> e faça login.</li>
+                <li>Acesse o <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #0056b3; font-weight: bold;">Google AI Studio</a>.</li>
                 <li>Clique no botão azul <b>Create API Key</b>.</li>
                 <li>Copie o código gerado, cole no campo abaixo e salve.</li>
             </ol>
@@ -184,7 +258,7 @@
                     </fieldset>
 
                     <fieldset>
-                        <legend>Resumo Estratégico (A Fórmula do Sucesso) <button type="button" class="btn-ia-small" onclick="melhorarTextoIA('in-resumo', 'resumo', this)">✨ Melhorar com IA</button></legend>
+                        <legend>Resumo Estratégico <button type="button" class="btn-ia-small" onclick="melhorarTextoIA('in-resumo', 'resumo', this)">✨ Melhorar c/ IA</button></legend>
                         <div class="caixa-ia" style="padding: 10px; margin-bottom: 10px; font-size:11px;">💡 <b>Dica:</b> Ação + Contexto/Tecnologia + Impacto. Fale de resultados, não só de tarefas.</div>
                         <div class="form-grupo">
                             <textarea id="in-resumo" style="min-height: 120px;">Profissional da área de tecnologia e desenvolvimento com sólida base técnica em Mecatrônica e cursando Bacharelado em Ciência e Tecnologia na UFABC. Atualmente atuo no desenvolvimento e homologação de produtos, focando em testes de protótipos, otimização de processos contínuos e contato técnico com fornecedores. Possuo forte capacidade de resolução de problemas, perfil proativo e conhecimentos práticos em linguagens de programação, buscando aplicar inovação em ambientes desafiadores.</textarea>
@@ -195,7 +269,6 @@
                         <legend>Experiência Profissional</legend>
                         <button type="button" class="btn-add" onclick="addExperiencia()">+ Adicionar Experiência</button>
                         <div id="container-experiencia">
-                            <!-- Exp 1 (Pré-preenchida Estrategicamente baseada no currículo original) -->
                             <div class="bloco-dinamico" style="border: 1px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
                                 <div class="linha">
                                     <div class="form-grupo"><label>Empresa</label><input type="text" class="exp-empresa" value="Sodramar"></div>
@@ -206,8 +279,8 @@
                                     <div class="form-grupo"><label>Período (Ex: 08/2024 - Atual)</label><input type="text" class="exp-data" value="08/2024 - Presente"></div>
                                 </div>
                                 <div class="form-grupo">
-                                    <label>Conquistas e Resultados (Use Marcadores / Bullets) <button type="button" class="btn-ia-small" onclick="melhorarTextoIA(this.closest('.form-grupo').querySelector('textarea'), 'experiencia', this)">✨ Melhorar com IA</button></label>
-                                    <textarea class="exp-descricao" style="min-height: 100px;">• Conduzo testes rigorosos em protótipos e proponho melhorias estruturais, contribuindo para o desenvolvimento de soluções tecnológicas mais inovadoras.
+                                    <label style="display:flex; justify-content:space-between; align-items:center;">Conquistas e Resultados <button type="button" class="btn-ia-small" onclick="melhorarTextoIA(this.closest('.form-grupo').querySelector('textarea'), 'experiencia', this)">✨ Melhorar c/ IA</button></label>
+                                    <textarea class="exp-descricao" style="min-height: 100px; margin-top:5px;">• Conduzo testes rigorosos em protótipos e proponho melhorias estruturais, contribuindo para o desenvolvimento de soluções tecnológicas mais inovadoras.
 • Colaboro ativamente com equipes multidisciplinares para otimização de fluxos produtivos e elaboração de documentação técnica padronizada.
 • Atuo na homologação de soluções técnicas e mantenho contato direto com fornecedores para garantir a qualidade dos insumos e alinhamento às tendências de mercado.</textarea>
                                 </div>
@@ -247,7 +320,7 @@
                     </fieldset>
 
                     <fieldset>
-                        <legend>Habilidades & Competências (Cursos)</legend>
+                        <legend>Habilidades & Competências</legend>
                         <div class="caixa-ia" style="padding: 10px; margin-bottom: 10px; font-size:11px;">💡 <b>Dica:</b> Agrupe por categorias. Ex: "Linguagens: Python, Java". Facilita a leitura do robô de recrutamento (ATS).</div>
                         <div class="form-grupo">
                             <textarea id="in-habilidades" style="min-height: 100px;">Linguagens de Programação: C, C++, Java e Python.
@@ -264,7 +337,7 @@ Idiomas: Inglês Básico.</textarea>
             <div id="aba-importar" class="aba-panel">
                 <div class="caixa-ia">
                     <strong>Importação Inteligente</strong><br>
-                    Anexe um currículo antigo em <b>PDF ou Word (.docx)</b> ou cole o texto cru na caixa. A Inteligência Artificial vai identificar os campos, melhorar a escrita focado em resultados (métricas) e preencher o formulário automaticamente.
+                    Anexe um currículo antigo em <b>PDF ou Word (.docx)</b> ou cole o texto cru na caixa. A Inteligência Artificial vai formatar tudo e preencher o formulário automaticamente.
                 </div>
                 
                 <fieldset style="background: white;">
@@ -311,6 +384,25 @@ Idiomas: Inglês Básico.</textarea>
         // Configuração Global do Leitor de PDF - Aponta o Worker para a nuvem
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+        // --- SISTEMA MOBILE (TOGGLE) ---
+        function toggleMobileModo() {
+            const painelLateral = document.getElementById('painel-lateral');
+            const btnToggle = document.getElementById('btn-mobile-toggle');
+            
+            // Se o painel lateral já está escondido (estamos vendo o CV), vamos voltar pro Formulário
+            if (painelLateral.classList.contains('oculto')) {
+                painelLateral.classList.remove('oculto');
+                btnToggle.innerHTML = "👁️ Ver Currículo";
+                btnToggle.style.backgroundColor = "var(--cor-destaque)";
+            } else {
+                // Se o formulário está visível, vamos esconder e mostrar o CV
+                painelLateral.classList.add('oculto');
+                btnToggle.innerHTML = "✏️ Editar Formulário";
+                btnToggle.style.backgroundColor = "#2ecc71"; // Fica verde
+                atualizarCV(); // Força uma atualização para garantir que tá certinho
+            }
+        }
+
         // --- CONFIGURAÇÃO DA API GEMINI NO NAVEGADOR ---
         function toggleConfigIA() {
             const painel = document.getElementById('painel-config-ia');
@@ -332,9 +424,8 @@ Idiomas: Inglês Básico.</textarea>
         }
 
         function getApiUrl() {
-            // A API KEY exata do seu prompt anterior que funciona
             const key = localStorage.getItem('gemini_api_key_cv') || '';
-            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
+            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
         }
 
         // --- NAVEGAÇÃO DE ABAS ---
@@ -362,8 +453,8 @@ Idiomas: Inglês Básico.</textarea>
                     <div class="form-grupo"><label>Período</label><input type="text" class="exp-data" value=""></div>
                 </div>
                 <div class="form-grupo">
-                    <label>Conquistas e Resultados (Use Bullets) <button type="button" class="btn-ia-small" onclick="melhorarTextoIA(this.closest('.form-grupo').querySelector('textarea'), 'experiencia', this)">✨ Melhorar com IA</button></label>
-                    <textarea class="exp-descricao" style="min-height: 80px;">• </textarea>
+                    <label style="display:flex; justify-content:space-between; align-items:center;">Conquistas e Resultados <button type="button" class="btn-ia-small" onclick="melhorarTextoIA(this.closest('.form-grupo').querySelector('textarea'), 'experiencia', this)">✨ Melhorar c/ IA</button></label>
+                    <textarea class="exp-descricao" style="min-height: 80px; margin-top:5px;">• </textarea>
                 </div>
             `;
             container.appendChild(div);
@@ -388,13 +479,10 @@ Idiomas: Inglês Básico.</textarea>
             container.appendChild(div);
         }
 
+        // --- ATUALIZAÇÃO VISUAL E PAGINAÇÃO ---
         function atualizarCV() {
             const container = document.getElementById('preview-pages');
-            
-            // Salva a posição do scroll para não "pular" a tela enquanto o usuário digita
             const scrollPos = container.scrollTop;
-            
-            // Limpa todas as páginas visíveis
             container.innerHTML = '';
 
             let paginaAtual = criarPagina(container);
@@ -414,32 +502,24 @@ Idiomas: Inglês Básico.</textarea>
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = htmlString.trim();
                 const el = tempDiv.firstChild;
-                
                 if(isTitle) el.classList.add('is-secao-titulo');
                 
                 conteudoAtual.appendChild(el);
                 
                 if (conteudoAtual.scrollHeight > conteudoAtual.clientHeight + 2) {
-                    
                     conteudoAtual.removeChild(el);
-                    
                     let elementoAnterior = conteudoAtual.lastElementChild;
                     let moveuTitulo = false;
                     if (elementoAnterior && elementoAnterior.classList.contains('is-secao-titulo')) {
                         conteudoAtual.removeChild(elementoAnterior);
                         moveuTitulo = true;
                     }
-
                     paginaAtual = criarPagina(container);
                     conteudoAtual = paginaAtual.querySelector('.conteudo-pagina');
-                    
-                    if(moveuTitulo) {
-                        conteudoAtual.appendChild(elementoAnterior);
-                    }
+                    if(moveuTitulo) conteudoAtual.appendChild(elementoAnterior);
                     conteudoAtual.appendChild(el);
                 }
             }
-
             
             // 1. CABEÇALHO
             const nome = document.getElementById('in-nome').value;
@@ -541,8 +621,6 @@ Idiomas: Inglês Básico.</textarea>
             const habTexto = document.getElementById('in-habilidades').value;
             if(habTexto.trim()) {
                 adicionarElemento(`<div class="cv-secao-titulo">HABILIDADES E COMPETÊNCIAS</div>`, true);
-                
-                // Formatação: Deixa em negrito o que estiver antes dos dois pontos (Ex: "Linguagens:")
                 const habFormatado = habTexto.split('\n').map(linha => {
                     if (linha.includes(':')) {
                         const partes = linha.split(':');
@@ -550,18 +628,15 @@ Idiomas: Inglês Básico.</textarea>
                     }
                     return linha + '<br>';
                 }).join('');
-                
                 adicionarElemento(`<div class="cv-habilidades">${habFormatado}</div>`);
             }
 
-            // Restaura o scroll para a posição que o usuário estava
             container.scrollTop = scrollPos; 
         }
 
-        // Executa na primeira carga da tela
         window.onload = atualizarCV;
 
-        // --- FUNÇÃO AUXILIAR: LER ARQUIVO PDF E WORD (NOVA) ---
+        // --- FUNÇÃO AUXILIAR: LER ARQUIVO PDF E WORD ---
         async function lerArquivoCurriculo(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -612,11 +687,9 @@ Idiomas: Inglês Básico.</textarea>
             }
         }
 
-        
-        // Função Auxiliar: Melhorar Textos Específicos com IA
+        // --- FUNÇÕES DA IA (MANTIDAS INTACTAS E FUNCIONANDO) ---
         async function melhorarTextoIA(elementoOuId, tipo, btnElement) {
             const apiUrl = getApiUrl();
-            
             let textarea = typeof elementoOuId === 'string' ? document.getElementById(elementoOuId) : elementoOuId;
             const textoAtual = textarea.value;
             
@@ -645,27 +718,24 @@ Idiomas: Inglês Básico.</textarea>
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const result = await response.json();
                 
-                // Trata o erro real devolvido pelo Google (ex: Chave inválida)
                 if (!response.ok) throw new Error(result.error?.message || "Erro de conexão com o Google.");
 
                 const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 
                 if (textResponse) {
                     textarea.value = textResponse.trim();
-                    atualizarCV(); // Força a atualização da página visual
+                    atualizarCV(); 
                 }
             } catch (error) {
-                alert("Erro na IA:\n" + error.message + "\n\nSe o erro for sobre 'API key', verifique se copiou a chave inteira sem espaços em '⚙️ API IA'.");
+                alert("Erro na IA:\n" + error.message + "\n\nVerifique se a chave API é válida em '⚙️ API IA'.");
             } finally {
                 btnElement.innerHTML = textoOriginalBtn;
                 btnElement.disabled = false;
             }
         }
 
-        // Função: Importar Currículo Cru e Separar no Formulário
         async function importarCV() {
             const apiUrl = getApiUrl();
-            
             const textoAntigo = document.getElementById('in-import').value;
             if(!textoAntigo.trim()) { alert("Cole o texto do seu currículo antigo primeiro!"); return; }
 
@@ -695,7 +765,6 @@ Idiomas: Inglês Básico.</textarea>
                 const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 
                 if (jsonText) {
-                    // Trava matemática (Expressão Regular): Remove marcação de markdown (```json) que o Google às vezes joga, mesmo quando pedimos MIME JSON
                     let cleanText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
                     const startIndex = cleanText.indexOf('{');
                     const endIndex = cleanText.lastIndexOf('}');
@@ -739,10 +808,8 @@ Idiomas: Inglês Básico.</textarea>
             }
         }
 
-        // Função: Analisador de Vagas (Comparação do CV atual x Vaga)
         async function analisarVaga() {
             const apiUrl = getApiUrl();
-            
             const vagaText = document.getElementById('in-vaga').value;
             if(!vagaText.trim()) { alert("Cole a descrição da vaga primeiro!"); return; }
 
@@ -750,12 +817,9 @@ Idiomas: Inglês Básico.</textarea>
             document.getElementById('btn-run-analyze').disabled = true;
             document.getElementById('out-analise-ia').style.display = 'none';
 
-            // Coleta todo o texto atualmente renderizado nas páginas do visualizador
             const cvAtualTexto = document.getElementById('preview-pages').innerText;
-
             const systemPrompt = `Você é um Recrutador Tech Sênior. Analise o currículo do candidato e compare com a vaga fornecida.
             Sua resposta deve ter: 1. 📊 Pontuação de Aderência (%), 2. ✅ O que está bom, 3. ⚠️ O que falta e 4. 🎯 Sugestão prática: Reescreva 1 experiência dele para utilizar as palavras-chave exigidas pela vaga.`;
-
             const payload = { contents: [{ parts: [{ text: `VAGA:\n${vagaText}\n\nCURRÍCULO ATUAL:\n${cvAtualTexto}` }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
 
             try {
